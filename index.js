@@ -50,6 +50,8 @@ async function run() {
         const classesCollections = client.db('crownArt').collection('classes')
         const selectedClassCollections = client.db('crownArt').collection('selected')
         const userCollections = client.db('crownArt').collection('users')
+
+        const instructorClassCollections = client.db('crownArt').collection('instructorClass')
         // collection ends here 
 
         // load all the classes in classes page 
@@ -89,7 +91,7 @@ async function run() {
             // console.log(admin)
             res.send(admin)
         })
-
+        // check user instructor or not 
         app.get('/users/instructor', verifyJwt, async (req, res) => {
             const email = req.query.email;
             // console.log('109', req.query)
@@ -104,6 +106,14 @@ async function run() {
             const instructor = { instructor: user?.role === 'instructor' }
             // console.log(instructor)
             res.send(instructor)
+        })
+
+        // get all the classes of an instructor in my classes page 
+        app.get('/instructor/classes', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const result = await instructorClassCollections.find(query).toArray()
+            res.send(result);
         })
         // student select the class 
         app.post('/classes', async (req, res) => {
@@ -132,6 +142,15 @@ async function run() {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
             res.send(token)
+
+        })
+        // instructor add a class 
+        app.post('/instructor', async (req, res) => {
+            const classInfo = req.body;
+            console.log(classInfo)
+            const result = await instructorClassCollections.insertOne(classInfo)
+            // console.log(result)
+            res.send(result);
         })
 
         // make user instructor using id 
