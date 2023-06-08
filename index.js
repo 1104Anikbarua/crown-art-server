@@ -115,6 +115,13 @@ async function run() {
             const result = await instructorClassCollections.find(query).toArray()
             res.send(result);
         })
+
+        // load all the classes in the admin dashboard 
+        app.get('/admin/classes', async (req, res) => {
+            const result = await instructorClassCollections.find({}).toArray()
+            res.send(result);
+        })
+
         // student select the class 
         app.post('/classes', async (req, res) => {
             const selectedCourse = req.body;
@@ -181,6 +188,35 @@ async function run() {
             const result = await userCollections.updateOne(query, updatedDoc)
             // console.log(result)
             res.send(result);
+        })
+
+        // denied course approval 
+        app.patch('/admin/denies/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status: 'denied'
+                }
+            }
+            const result = await instructorClassCollections.updateOne(query, updatedDoc)
+            // console.log(result);
+            res.send(result);
+
+        })
+        // Approved course approval 
+        app.patch('/admin/approves/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status: 'approved'
+                }
+            }
+            const result = await instructorClassCollections.updateOne(query, updatedDoc)
+            // console.log(result);
+            res.send(result);
+
         })
         // student remove class from their dashboard
         app.delete('/classes/:id', async (req, res) => {
