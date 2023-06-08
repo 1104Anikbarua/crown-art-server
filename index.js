@@ -22,6 +22,25 @@ const client = new MongoClient(uri, {
     }
 });
 
+// verifyJwt functions
+const verifyJwt = (req, res, next) => {
+    // console.log('inside jwt', req.headers.authorization)
+    const authorization = req.headers.authorization;
+    if (!authorization) {
+        return res.status(401).send({ error: true, Message: 'Unauthorized Access from line 31' })
+    }
+    const token = authorization.split(' ')[1]
+    // console.log(token)
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ error: true, Message: 'Forbiden Access from line 37' })
+        }
+        req.decoded = decoded
+        next()
+    })
+
+}
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -47,11 +66,45 @@ async function run() {
             const result = await selectedClassCollections.find(query).toArray()
             res.send(result);
         }),
+
             // load all the users 
             app.get('/users', async (req, res) => {
                 const result = await userCollections.find({}).toArray();
                 res.send(result)
             })
+
+        // verify the user is admin or not 
+        app.get('/users/admin', verifyJwt, async (req, res) => {
+            const email = req.query.email;
+            // console.log('109', req.query)
+            const decodedEmail = req.decoded?.email;
+            // console.log('122', decodedEmail)
+            // console.log('123', email)
+            if (decodedEmail !== email) {
+                res.send({ admin: false })
+            }
+            const query = { email: email };
+            const user = await userCollections.findOne(query);
+            const admin = { admin: user?.role === 'admin' }
+            // console.log(admin)
+            res.send(admin)
+        })
+
+        app.get('/users/instructor', verifyJwt, async (req, res) => {
+            const email = req.query.email;
+            // console.log('109', req.query)
+            const decodedEmail = req.decoded?.email;
+            // console.log('122', decodedEmail)
+            // console.log('123', email)
+            if (decodedEmail !== email) {
+                res.send({ instructor: false })
+            }
+            const query = { email: email };
+            const user = await userCollections.findOne(query);
+            const instructor = { instructor: user?.role === 'instructor' }
+            // console.log(instructor)
+            res.send(instructor)
+        })
         // student select the class 
         app.post('/classes', async (req, res) => {
             const selectedCourse = req.body;
@@ -74,8 +127,15 @@ async function run() {
             res.send(result)
         })
 
+        // create token and send to client side 
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send(token)
+        })
+
         // make user instructor using id 
-        app.patch('/users/:id', async (req, res) => {
+        app.patch('/instructor/users/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             // console.log(query)
@@ -85,8 +145,8 @@ async function run() {
                 }
             }
             const result = await userCollections.updateOne(query, updatedDoc)
-            console.log(result)
-            // res.send(result);
+            // console.log(result)
+            res.send(result);
         })
 
         // make user instructor using id 
@@ -100,8 +160,8 @@ async function run() {
                 }
             }
             const result = await userCollections.updateOne(query, updatedDoc)
-            console.log(result)
-            // res.send(result);
+            // console.log(result)
+            res.send(result);
         })
         // student remove class from their dashboard
         app.delete('/classes/:id', async (req, res) => {
