@@ -62,7 +62,7 @@ async function run() {
 
         // load specific student booked class in dashobard
         app.get('/selected/classes', async (req, res) => {
-            const email = req.query.email;
+            const email = req.query?.email;
             // console.log(email)
             const query = { email: email }
             const result = await selectedClassCollections.find(query).toArray()
@@ -77,7 +77,7 @@ async function run() {
 
         // verify the user is admin or not 
         app.get('/users/admin', verifyJwt, async (req, res) => {
-            const email = req.query.email;
+            const email = req.query?.email;
             // console.log('109', req.query)
             const decodedEmail = req.decoded?.email;
             // console.log('122', decodedEmail)
@@ -93,7 +93,7 @@ async function run() {
         })
         // check user instructor or not 
         app.get('/users/instructor', verifyJwt, async (req, res) => {
-            const email = req.query.email;
+            const email = req.query?.email;
             // console.log('109', req.query)
             const decodedEmail = req.decoded?.email;
             // console.log('122', decodedEmail)
@@ -110,7 +110,7 @@ async function run() {
 
         // get all the classes of an instructor in my classes page 
         app.get('/instructor/classes', async (req, res) => {
-            const email = req.query.email;
+            const email = req.query?.email;
             const query = { email: email }
             const result = await instructorClassCollections.find(query).toArray()
             res.send(result);
@@ -162,7 +162,7 @@ async function run() {
 
         // make user instructor using id 
         app.patch('/instructor/users/:id', async (req, res) => {
-            const id = req.params.id;
+            const id = req.params?.id;
             const query = { _id: new ObjectId(id) }
             // console.log(query)
             const updatedDoc = {
@@ -177,7 +177,7 @@ async function run() {
 
         // make user instructor using id 
         app.patch('/admin/users/:id', async (req, res) => {
-            const id = req.params.id;
+            const id = req.params?.id;
             const query = { _id: new ObjectId(id) }
             // console.log(query)
             const updatedDoc = {
@@ -192,7 +192,7 @@ async function run() {
 
         // denied course approval 
         app.patch('/admin/denies/:id', async (req, res) => {
-            const id = req.params.id;
+            const id = req.params?.id;
             const query = { _id: new ObjectId(id) };
             const updatedDoc = {
                 $set: {
@@ -206,7 +206,7 @@ async function run() {
         })
         // Approved course approval 
         app.patch('/admin/approves/:id', async (req, res) => {
-            const id = req.params.id;
+            const id = req.params?.id;
             const query = { _id: new ObjectId(id) };
             const updatedDoc = {
                 $set: {
@@ -218,9 +218,23 @@ async function run() {
             res.send(result);
 
         })
+        // admin give feedback 
+        app.patch('/admin/feedbacks/:id', async (req, res) => {
+            const id = req.params?.id;
+            const feedback = req.body?.feedBack;
+            // console.log(feedback, '226')
+            const query = { _id: new ObjectId(id) };
+            // console.log(query, "227")
+            const updatedDoc = {
+                $set: { feedback: feedback }
+            }
+            const result = await instructorClassCollections.updateOne(query, updatedDoc)
+            // console.log(result)
+            res.send(result)
+        })
         // student remove class from their dashboard
         app.delete('/classes/:id', async (req, res) => {
-            const id = req.params.id;
+            const id = req.params?.id;
             const query = { _id: new ObjectId(id) }
             const result = await selectedClassCollections.deleteOne(query)
             res.send(result)
