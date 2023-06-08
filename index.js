@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -29,8 +29,9 @@ async function run() {
 
         // collection starts here 
         const classesCollections = client.db('crownArt').collection('classes')
-
         const selectedClassCollections = client.db('crownArt').collection('selected')
+        const userCollections = client.db('crownArt').collection('users')
+        // collection ends here 
 
         // load all the classes in classes page 
         app.get('/classes', async (req, res) => {
@@ -38,13 +39,40 @@ async function run() {
             res.send(result)
         })
 
+        // load specific student booked class in dashobard
+        app.get('/selected/classes', async (req, res) => {
+            const email = req.query.email;
+            // console.log(email)
+            const query = { email: email }
+            const result = await selectedClassCollections.find(query).toArray()
+            res.send(result);
+        })
         // student select the class 
-
         app.post('/classes', async (req, res) => {
             const selectedCourse = req.body;
             // console.log(selectedCourse)
             const result = await selectedClassCollections.insertOne(selectedCourse)
             // console.log(result)
+            res.send(result)
+        })
+
+        // store user information when sign up and check to prevent duplicate entry
+        app.post('/users', async (req, res) => {
+            const userInfo = req.body;
+            // console.log(userInfo)
+            const query = { email: userInfo?.email }
+            const existingUser = await userCollections.findOne(query)
+            if (existingUser) {
+                return res.send({ message: 'User Already Exsist' })
+            }
+            const result = await userCollections.insertOne(userInfo)
+            res.send(result)
+        })
+        // student remove class from their dashboard
+        app.delete('/classes/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await selectedClassCollections.deleteOne(query)
             res.send(result)
         })
 
