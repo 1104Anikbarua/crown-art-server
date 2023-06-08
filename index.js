@@ -46,7 +46,12 @@ async function run() {
             const query = { email: email }
             const result = await selectedClassCollections.find(query).toArray()
             res.send(result);
-        })
+        }),
+            // load all the users 
+            app.get('/users', async (req, res) => {
+                const result = await userCollections.find({}).toArray();
+                res.send(result)
+            })
         // student select the class 
         app.post('/classes', async (req, res) => {
             const selectedCourse = req.body;
@@ -67,6 +72,36 @@ async function run() {
             }
             const result = await userCollections.insertOne(userInfo)
             res.send(result)
+        })
+
+        // make user instructor using id 
+        app.patch('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            // console.log(query)
+            const updatedDoc = {
+                $set: {
+                    role: 'instructor'
+                }
+            }
+            const result = await userCollections.updateOne(query, updatedDoc)
+            console.log(result)
+            // res.send(result);
+        })
+
+        // make user instructor using id 
+        app.patch('/admin/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            // console.log(query)
+            const updatedDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await userCollections.updateOne(query, updatedDoc)
+            console.log(result)
+            // res.send(result);
         })
         // student remove class from their dashboard
         app.delete('/classes/:id', async (req, res) => {
