@@ -30,9 +30,21 @@ async function run() {
         // collection starts here 
         const classesCollections = client.db('crownArt').collection('classes')
 
+        const selectedClassCollections = client.db('crownArt').collection('selected')
+
         // load all the classes in classes page 
         app.get('/classes', async (req, res) => {
             const result = await classesCollections.find({}).toArray();
+            res.send(result)
+        })
+
+        // student select the class 
+
+        app.post('/classes', async (req, res) => {
+            const selectedCourse = req.body;
+            // console.log(selectedCourse)
+            const result = await selectedClassCollections.insertOne(selectedCourse)
+            // console.log(result)
             res.send(result)
         })
 
