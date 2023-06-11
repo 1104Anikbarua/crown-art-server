@@ -4,6 +4,9 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+const stripe = require("stripe")(process.env.STRIPE_SECRET);
+// console.log(stripe)
+
 const port = process.env.PORT || 5000;
 const app = express();
 app.use(cors())
@@ -52,11 +55,13 @@ async function run() {
         const userCollections = client.db('crownArt').collection('users')
 
         const instructorClassCollections = client.db('crownArt').collection('instructorClass')
+
+        const studentPaymentCollection = client.db('crownArt').collection('payments')
         // collection ends here 
 
         // load all the classes in classes page 
         app.get('/classes', async (req, res) => {
-            const result = await classesCollections.find({}).toArray();
+            const result = await instructorClassCollections.find({}).toArray();
             res.send(result)
         })
 
@@ -122,6 +127,14 @@ async function run() {
             res.send(result);
         })
 
+        // load class based on id for payments 
+        app.get('/selected/classes/:id', async (req, res) => {
+            const id = req.params?.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await selectedClassCollections.findOne(query)
+            res.send(result)
+        })
+
         // student select the class 
         app.post('/classes', async (req, res) => {
             const selectedCourse = req.body;
@@ -154,11 +167,29 @@ async function run() {
         // instructor add a class 
         app.post('/instructor', async (req, res) => {
             const classInfo = req.body;
-            console.log(classInfo)
+            // console.log(classInfo)
             const result = await instructorClassCollections.insertOne(classInfo)
             // console.log(result)
             res.send(result);
-        })
+        });
+
+        // post price and create payment intent 
+        app.post('/create-payment-intent', async (req, res) => {
+            // console.log(req.body)
+            const courseFee = req.body;
+            // console.log(courseFee)
+            const price = courseFee?.price;
+            const amount = price * 100;
+            // console.log(amount)
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: [
+                    "card"
+                ],
+            })
+            res.send({ clientSecret: paymentIntent.client_secret });
+        });
 
         // make user instructor using id 
         app.patch('/instructor/users/:id', async (req, res) => {
@@ -231,6 +262,45 @@ async function run() {
             const result = await instructorClassCollections.updateOne(query, updatedDoc)
             // console.log(result)
             res.send(result)
+        })
+
+        // update class payment status in selected class collections and reduce one seat in instructor class collection 
+        app.patch('/classes/payment/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id)
+            const payment = req.body;
+            console.log(payment)
+            const paymentDetail = {
+                className: payment?.className,
+                trxid: payment?.trxid,
+                studentName: payment?.name,
+                email: payment?.email,
+                time: payment.time
+            }
+            const query = { _id: new ObjectId(id) };
+            console.log(query)
+
+            const enrolledNumber = await instructorClassCollections.findOne(query)
+            console.log(enrolledNumber)
+            // const updatedDoc = {
+            //     $set: {
+            //         paid: true,
+            //         transactionId: payment?.trxid,
+            //         availableSeats: (availableSeats - 1)
+
+            //     }
+            // }
+            // const selectedCourse = await selectedClassCollections.updateOne(query, updatedDoc);
+            // console.log(selectedCourse)
+            // const result = await paymentCollection.insertOne(paymentDetail);
+            // sendingPaymentConfirmationEmail(payment);
+
+            // res.send(updatedDoc);
+            // const response = {
+            //     selectedCourse: selectedCourse,
+            //     result: result
+            // };
+
         })
         // student remove class from their dashboard
         app.delete('/classes/:id', async (req, res) => {
