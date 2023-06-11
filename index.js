@@ -277,31 +277,45 @@ async function run() {
                 email: payment?.email,
                 time: payment.time
             }
-            const query = { _id: new ObjectId(id) };
-            console.log(query)
+            const query = { _id: new ObjectId(payment?.mainCourseId) };
+            // console.log(query)
 
             const enrolledNumber = await instructorClassCollections.findOne(query)
-            console.log(enrolledNumber)
-            // const updatedDoc = {
-            //     $set: {
-            //         paid: true,
-            //         transactionId: payment?.trxid,
-            //         availableSeats: (availableSeats - 1)
-
-            //     }
-            // }
-            // const selectedCourse = await selectedClassCollections.updateOne(query, updatedDoc);
-            // console.log(selectedCourse)
-            // const result = await paymentCollection.insertOne(paymentDetail);
-            // sendingPaymentConfirmationEmail(payment);
-
-            // res.send(updatedDoc);
-            // const response = {
-            //     selectedCourse: selectedCourse,
-            //     result: result
-            // };
-
+            // console.log(enrolledNumber)
+            const seats = enrolledNumber?.availableSeats;
+            let enrolled = 0;
+            if (enrolledNumber?.enrolled) {
+                enrolled = enrolledNumber.enrolled + 1
+            }
+            else {
+                enrolled = 1
+            }
+            const updatedDoc = {
+                $set: {
+                    enrolled: enrolled,
+                    availableSeats: seats - 1,
+                    studentEmail: payment.email,
+                    time: payment.time,
+                }
+            }
+            const result = await instructorClassCollections.updateOne(query, updatedDoc)
+            res.send(result)
         })
+        app.patch('/payment/:id', async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const query = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment?.trxid,
+                    time: payment.time
+                }
+            }
+            const result = await selectedClassCollections.updateOne(query, updatedDoc)
+            res.send(result)
+        })
+
         // student remove class from their dashboard
         app.delete('/classes/:id', async (req, res) => {
             const id = req.params?.id;
