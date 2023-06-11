@@ -135,6 +135,23 @@ async function run() {
             res.send(result)
         })
 
+        // load paid classes in the  my enrolled classese 
+        app.get('/enrolled', async (req, res) => {
+            const email = req.query?.email;
+            const query = { studentEmail: email }
+            const result = await instructorClassCollections.find(query).toArray();
+            // console.log(result)
+            res.send(result);
+        })
+        // load payment history in my payment history 
+        app.get('/payments', async (req, res) => {
+            const email = req.query?.email;
+            console.log(email)
+            const query = { email: email }
+            const result = await selectedClassCollections.find(query).sort({ time: -1 }).toArray();
+            res.send(result)
+        })
+
         // student select the class 
         app.post('/classes', async (req, res) => {
             const selectedCourse = req.body;
