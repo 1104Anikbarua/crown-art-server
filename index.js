@@ -146,7 +146,7 @@ async function run() {
         // load payment history in my payment history 
         app.get('/payments', async (req, res) => {
             const email = req.query?.email;
-            console.log(email)
+            // console.log(email)
             const query = { email: email }
             const result = await selectedClassCollections.find(query).sort({ time: -1 }).toArray();
             res.send(result)
