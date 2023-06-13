@@ -47,7 +47,7 @@ const verifyJwt = (req, res, next) => {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+
 
         // collection starts here 
         const classesCollections = client.db('crownArt').collection('classes')
@@ -178,6 +178,7 @@ async function run() {
         app.post('/jwt', (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            console.log(user)
             res.send(token)
 
         })
