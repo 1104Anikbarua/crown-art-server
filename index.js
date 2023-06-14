@@ -103,7 +103,7 @@ async function run() {
         }),
 
             // load all the users 
-            app.get('/users', async (req, res) => {
+            app.get('/users', verifyJwt, async (req, res) => {
                 const result = await userCollections.find({}).toArray();
                 res.send(result)
             })
