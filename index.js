@@ -176,7 +176,7 @@ async function run() {
             const email = req.query?.email;
             // console.log(email)
             const query = { email: email }
-            const result = await selectedClassCollections.find(query).sort({ time: 1 }).toArray();
+            const result = await selectedClassCollections.find(query).sort({ time: -1 }).toArray();
             res.send(result)
         })
         // load all the user and filter only users 
