@@ -65,6 +65,34 @@ async function run() {
             res.send(result)
         })
 
+        // load all the instructor to find popular instructor
+        app.get('/instructors/popular', async (req, res) => {
+            // const options = {
+            //     projection: {
+            //         title: 1,
+            //         img: 1,
+            //         price: 1,
+            //         service_id: 1,
+            //     }
+            // }
+            const result = await instructorClassCollections.find({}).toArray();
+            res.send(result)
+        })
+        // load all the instructor to find popular instructor
+        app.get('/classes/popular', async (req, res) => {
+            // const options = {
+            //     projection: {
+            //         title: 1,
+            //         img: 1,
+            //         price: 1,
+            //         service_id: 1,
+            //     }
+            // }
+            const result = await instructorClassCollections.find({}).toArray();
+            res.send(result)
+        })
+
+
         // load specific student booked class in dashobard
         app.get('/selected/classes', async (req, res) => {
             const email = req.query?.email;
@@ -151,7 +179,12 @@ async function run() {
             const result = await selectedClassCollections.find(query).sort({ time: -1 }).toArray();
             res.send(result)
         })
-
+        // load all the user and filter only users 
+        app.get('/instructors', async (req, res) => {
+            // const query={};
+            const result = await userCollections.find({}).toArray()
+            res.send(result);
+        })
         // student select the class 
         app.post('/classes', async (req, res) => {
             const selectedCourse = req.body;
@@ -178,7 +211,7 @@ async function run() {
         app.post('/jwt', (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
-            console.log(user)
+            // console.log(user)
             res.send(token)
 
         })
@@ -285,9 +318,9 @@ async function run() {
         // update class payment status in selected class collections and reduce one seat in instructor class collection 
         app.patch('/classes/payment/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id)
+            // console.log(id)
             const payment = req.body;
-            console.log(payment)
+            // console.log(payment)
             const paymentDetail = {
                 className: payment?.className,
                 trxid: payment?.trxid,
@@ -319,6 +352,8 @@ async function run() {
             const result = await instructorClassCollections.updateOne(query, updatedDoc)
             res.send(result)
         })
+
+        // update payment information 
         app.patch('/payment/:id', async (req, res) => {
             const id = req.params.id;
             const payment = req.body;
@@ -333,6 +368,21 @@ async function run() {
             const result = await selectedClassCollections.updateOne(query, updatedDoc)
             res.send(result)
         })
+        app.patch('/instructor/:id', async (req, res) => {
+            const id = req.params.id;
+            const photo = req.body
+            // console.log(photo)
+            const query = { _id: new ObjectId(id) };
+            // console.log(query)
+            const updatedDoc = {
+                $set: {
+                    photo: photo?.photo
+                }
+            }
+            const result = await instructorClassCollections.updateOne(query, updatedDoc)
+            res.send(result);
+
+        })
 
         // student remove class from their dashboard
         app.delete('/classes/:id', async (req, res) => {
@@ -342,6 +392,22 @@ async function run() {
             res.send(result)
         })
 
+
+        // temporary update instructor 
+        // app.patch('/instructor/update/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const photo = req.body
+        //     console.log(photo)
+        //     const query = { _id: new ObjectId(id) };
+        //     // console.log(query)
+        //     const updatedDoc = {
+        //         $set: {
+        //             image: photo?.photo
+        //         }
+        //     }
+        //     const result = await userCollections.updateOne(query, updatedDoc)
+        //     res.send(result);
+        // })
 
 
 
