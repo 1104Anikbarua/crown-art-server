@@ -228,7 +228,7 @@ async function run() {
         app.post('/create-payment-intent', async (req, res) => {
             // console.log(req.body)
             const courseFee = req.body;
-            // console.log(courseFee)
+            console.log(courseFee)
             const price = courseFee?.price;
             const amount = price * 100;
             // console.log(amount)
